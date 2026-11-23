@@ -55,7 +55,8 @@ THRESHOLDS = [--hp-min N] [--locus-join-gap N] [--end-dist N]
   `*.fna`, optionally `.gz`) as one set, processes the sets one after another, and writes
   `OUTDIR/<set>/{discordance_report.md, aligned.fasta, variants.json, calls.tsv, variants.vcf,
   [cds.tsv], variants.tsv, pairwise.tsv, discordance*.tsv}`, plus `OUTDIR/summary.tsv` (all sets,
-  with a `set` column) and `OUTDIR/run_info.json` (tool and mafft versions, command line, inputs,
+  with a `set` column), `OUTDIR/discordance_by_set.tsv` (one row per set; see
+  [Disagreement analysis](#disagreement-analysis)) and `OUTDIR/run_info.json` (tool and mafft versions, command line, inputs,
   reference SHA-256, thresholds, fixed behaviours, skipped sets). Before aligning, `run` skips,
   with a warning, any set in which fewer than two records contain an A, C, G or T (there is
   nothing to compare); a skipped set gets no directory and no `summary.tsv` rows. `run` does not
@@ -220,6 +221,15 @@ Outputs:
   the keys only in a / only in b (coordinates: join `locus` to `discordance.tsv`).
 - `discordance_summary.tsv`: per reason, the number of loci where it is primary (and of those,
   callable-discordant), the number of loci where it occurs at all, and the number of pairs.
+- `discordance_by_set.tsv` (`run` only, in `OUTDIR`): one row per set describing the
+  disagreement between that set's samples. `discordant_loci` and `discordant_positions` (reference
+  bases spanned by those loci; loci never overlap); `callable_discordant_loci` (callable samples
+  carry different sequences) and `uncallable_only_loci` (disagreement only through missing data or
+  ambiguity codes); one column per reason with the number of loci where it is the primary reason;
+  `near_end`, `homopolymer` and `frameshift` (loci with that flag); `fs_loci` and
+  `premature_stop_loci` (loci with that `cds_effect`, counting `fs_compensated` as `fs`; `.`
+  without `--annotation`); `odd_one_out` (`sample:loci` for samples that differ from the majority
+  haplotype); and `most_discordant_pair` (`a,b:n`, the pair with the most real differences).
 
 ### Worked example
 

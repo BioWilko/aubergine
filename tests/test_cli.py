@@ -180,6 +180,12 @@ def test_run(tmp_path):
     assert "premature_stop" in cds
     disc = (out / "b" / "discordance.tsv").read_text()
     assert "g1:premature_stop(b1)" in disc
+    by_set = [ln.split("\t") for ln in (out / "discordance_by_set.tsv").read_text().splitlines()]
+    rows = {r[0]: dict(zip(by_set[0], r, strict=True)) for r in by_set[1:]}
+    assert set(rows) == {"a", "b"}
+    assert (rows["b"]["discordant_loci"], rows["b"]["snp_presence"]) == ("1", "1")
+    assert (rows["b"]["premature_stop_loci"], rows["b"]["most_discordant_pair"]) == ("1", "b1,b2:1")
+    assert rows["a"]["frameshift"] == "1"
 
 
 def test_run_skips_sets_without_two_informative_records(tmp_path, caplog):

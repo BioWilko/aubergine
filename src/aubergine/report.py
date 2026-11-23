@@ -6,26 +6,11 @@ from collections import Counter
 from pathlib import Path
 
 from .call import CallSet
-from .discord import LOCUS_RANKING, LocusResult, _display, cds_effects
+from .discord import LOCUS_RANKING, LocusResult, _display, cds_effects, pair_differences
 
 REPORT_MAX_LOCI = 50
 REPORT_MAX_MATRIX_SAMPLES = 12
 REPORT_TOP_PAIRS = 20
-NOT_REAL = {"missing_data", "ambiguity", "equivalent_representation"}
-
-
-def _pair_counts(disc: list[LocusResult], a: str, b: str) -> tuple[int, int]:
-    """(real differences, equivalent-representation loci) for one sample pair."""
-    real = equiv = 0
-    for r in disc:
-        p = r.pair(a, b)
-        if p is None:
-            continue
-        if p.reason == "equivalent_representation":
-            equiv += 1
-        elif p.reason not in NOT_REAL:
-            real += 1
-    return real, equiv
 
 
 def _pair_cell(real: int, equiv: int) -> str:
@@ -108,14 +93,14 @@ def write_report(cs: CallSet, results: list[LocusResult], path: Path) -> None:
         w("|---|" + "--:|" * len(samples))
         for i, a in enumerate(samples):
             cells = [
-                _pair_cell(*_pair_counts(disc, a, b)) if j > i else ""
+                _pair_cell(*pair_differences(disc, a, b)) if j > i else ""
                 for j, b in enumerate(samples)
             ]
             w(f"| {short[a]} | " + " | ".join(cells) + " |")
         w("\n" + "; ".join(f"{short[s]} = {s}" for s in samples) + "\n")
     else:
         pairs = [
-            (a, b, *_pair_counts(disc, a, b))
+            (a, b, *pair_differences(disc, a, b))
             for i, a in enumerate(samples)
             for b in samples[i + 1 :]
         ]

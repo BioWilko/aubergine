@@ -413,3 +413,74 @@ def write_outputs(cs: CallSet, results: list[LocusResult], paths: dict[str, Path
             ]
         )
     write_tsv(paths["discordance_summary"], SUMMARY_HEADER, summary)
+
+
+NOT_REAL = {"missing_data", "ambiguity", "equivalent_representation"}
+
+SET_SUMMARY_HEADER = [
+    "set",
+    "n_samples",
+    "n_variant_keys",
+    "discordant_loci",
+    "discordant_positions",
+    "callable_discordant_loci",
+    "uncallable_only_loci",
+    *REASONS,
+    *FLAGS,
+    "fs_loci",
+    "premature_stop_loci",
+    "odd_one_out",
+    "most_discordant_pair",
+]
+
+
+def pair_differences(disc: list[LocusResult], a: str, b: str) -> tuple[int, int]:
+    """(real differences, equivalent-representation loci) between two samples."""
+    real = equiv = 0
+    for r in disc:
+        p = r.pair(a, b)
+        if p is None:
+            continue
+        if p.reason == "equivalent_representation":
+            equiv += 1
+        elif p.reason not in NOT_REAL:
+            real += 1
+    return real, equiv
+
+
+def set_summary_row(cs: CallSet, results: list[LocusResult]) -> list:
+    """One row describing the disagreement between the samples of one set."""
+    samples = cs.sample_ids
+    disc = [r for r in results if r.discordant]
+    n_callable = sum(r.callable_discordant for r in disc)
+    primary = Counter(r.primary_reason for r in disc)
+    flags = Counter(f for r in disc for f in r.flags)
+    effects = cds_effects(cs, disc).values()
+    odd = Counter(s for r in disc for s in r.odd_samples)
+    pairs = [
+        (pair_differences(disc, a, b), a, b)
+        for i, a in enumerate(samples)
+        for b in samples[i + 1 :]
+    ]
+    top = max(pairs, key=lambda x: x[0][0], default=None)
+    return [
+        cs.set_name,
+        len(samples),
+        len(cs.variants),
+        len(disc),
+        sum(r.locus.end - r.locus.start + 1 for r in disc),
+        n_callable,
+        len(disc) - n_callable,
+        *(primary[reason] for reason in REASONS),
+        *(flags[f] for f in FLAGS),
+        *(
+            (
+                sum(any(":fs" in e for e in eff) for eff in effects),
+                sum(any(":premature_stop" in e for e in eff) for eff in effects),
+            )
+            if cs.annotation
+            else (None, None)  # not evaluated without --annotation
+        ),
+        [f"{s}:{odd[s]}" for s in samples if odd[s]],
+        f"{top[1]},{top[2]}:{top[0][0]}" if top and top[0][0] else None,
+    ]

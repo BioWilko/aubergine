@@ -5,7 +5,16 @@ from cds_helpers import gff
 from conftest import FIXTURES, analysis
 
 from aubergine.cli import main
-from aubergine.discord import REASONS, Locus, LocusResult, build_loci, cds_effects
+from aubergine.discord import (
+    REASONS,
+    SET_SUMMARY_HEADER,
+    Locus,
+    LocusResult,
+    build_loci,
+    cds_effects,
+    set_summary_row,
+)
+from aubergine.io import read_callset
 
 EXAMPLE = FIXTURES / "discord_example"
 
@@ -244,3 +253,20 @@ def test_shuffled_sample_order_changes_only_columns(tmp_path):
     )
     assert main(["-q", "compare", "-o", str(out), f"{out}.variants.json"]) == 0
     assert labels(a.with_suffix(".discordance.tsv")) == labels(out.with_suffix(".discordance.tsv"))
+
+
+def test_set_summary_row_worked_example(tmp_path):
+    out = _run_example(tmp_path)
+    cs = read_callset(out.with_suffix(".variants.json"))
+    _, results, _ = analysis(cs)
+    row = dict(zip(SET_SUMMARY_HEADER, set_summary_row(cs, results), strict=True))
+    reasons = {r: row[r] for r in REASONS if row[r]}
+    assert reasons == {"paired_indel": 1, "indel_length": 1, "missing_data": 1}
+    assert (row["n_samples"], row["n_variant_keys"]) == (3, 7)
+    # L1:6-11 (6 bp) + L1:16-18 (3 bp) + L1:22-22 (1 bp)
+    assert (row["discordant_loci"], row["discordant_positions"]) == (3, 10)
+    assert (row["callable_discordant_loci"], row["uncallable_only_loci"]) == (2, 1)
+    assert (row["near_end"], row["homopolymer"], row["frameshift"]) == (3, 1, 0)
+    assert (row["fs_loci"], row["premature_stop_loci"]) == (None, None)  # no annotation
+    assert row["odd_one_out"] == ["s3:1"]
+    assert row["most_discordant_pair"] == "s1,s3:2"

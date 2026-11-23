@@ -13,7 +13,7 @@ from . import __version__
 from .call import CallError, CallSet, call_set
 from .cds import AnnotationError, annotate, parse_gff3, write_cds_tsv
 from .compare import CompareError, state_table, write_pairwise, write_truth, write_variants_wide
-from .discord import analyse, write_outputs
+from .discord import SET_SUMMARY_HEADER, LocusResult, analyse, set_summary_row, write_outputs
 from .fasta import FastaError, Reference, has_content, load_alignment, read_fasta
 from .haplotype import build_sample_events
 from .io import (
@@ -154,7 +154,9 @@ def run_call(
     return cs
 
 
-def run_compare(cs: CallSet, thresholds: dict, truth: str | None, out: dict[str, Path]) -> None:
+def run_compare(
+    cs: CallSet, thresholds: dict, truth: str | None, out: dict[str, Path]
+) -> list[LocusResult]:
     sample_events = build_sample_events(cs)
     states = state_table(cs, sample_events)
     loci = analyse(cs, sample_events, thresholds)
@@ -166,6 +168,7 @@ def run_compare(cs: CallSet, thresholds: dict, truth: str | None, out: dict[str,
         write_truth(cs, states, loci, truth, out)
     n_disc = sum(1 for r in loci if r.discordant)
     log.info("%s: %d loci, %d discordant", cs.set_name, len(loci), n_disc)
+    return loci
 
 
 # --------------------------------------------------------------------------- commands
@@ -232,6 +235,7 @@ def cmd_run(args, argv: list[str]) -> None:
     outdir = Path(args.output)
     outdir.mkdir(parents=True, exist_ok=True)
     run_rows = []
+    set_rows = []
     skipped = []
     mafft_cmd: list[str] = []
     for f in files:
@@ -258,9 +262,12 @@ def cmd_run(args, argv: list[str]) -> None:
         call_out["vcf"] = setdir / "variants.vcf"
         del call_out["summary.tsv"]  # written once, at the top level
         cs = run_call(reference, aligned, name, thresholds, args.annotation, call_out)
-        run_compare(cs, thresholds, None, {n: setdir / fn for n, fn in COMPARE_OUTPUTS.items()})
+        compare_out = {n: setdir / fn for n, fn in COMPARE_OUTPUTS.items()}
+        loci = run_compare(cs, thresholds, None, compare_out)
         run_rows += summary_rows(cs)
+        set_rows.append(set_summary_row(cs, loci))
     write_tsv(outdir / "summary.tsv", SUMMARY_HEADER, run_rows)
+    write_tsv(outdir / "discordance_by_set.tsv", SET_SUMMARY_HEADER, set_rows)
     info = {
         "tool_version": __version__,
         "command_line": ["aubergine", *argv],
