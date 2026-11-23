@@ -1,0 +1,12 @@
+name: aubergine
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - python>=3.10
+  - numpy
+  - mafft=7.520
+  - bcftools
+  - pytest
+  - ruff
+  - pip

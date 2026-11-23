@@ -1,0 +1,4 @@
+set	locus	contig	start	end	keys	haplotype_concordant	callable_discordant	primary_reason	reasons	flags	genes	haplotypes	odd_samples	cds_effect	s1	s2	s3
+example	L1:6-11	ref	6	11	del:ref:5:CA:C;del:ref:5:CAA:C	no	yes	indel_length	indel_length;indel_presence	near_end;homopolymer	.	H0=AAAAAA;H1=AAAA;H2=AAAAA	.	.	H2	H1	H0
+example	L1:16-18	ref	16	18	del:ref:15:CG:C;snp:ref:16:G:A;ins:ref:17:A:AG;snp:ref:17:A:G	no	yes	paired_indel	equivalent_representation;paired_indel;snp_presence	near_end	.	H0=GAT;H1=AGT	s3	.	H1	H1	H0
+example	L1:22-22	ref	22	22	snp:ref:22:T:C	yes	no	missing_data	missing_data	near_end	.	H1=C	.	.	H1	H1	missing

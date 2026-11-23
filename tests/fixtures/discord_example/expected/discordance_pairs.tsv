@@ -1,0 +1,9 @@
+set	locus	sample_a	sample_b	hap_a	hap_b	reason	only_a	only_b	flags
+example	L1:6-11	s1	s2	H2	H1	indel_length	del:ref:5:CA:C	del:ref:5:CAA:C	near_end;homopolymer
+example	L1:6-11	s1	s3	H2	H0	indel_presence	del:ref:5:CA:C	.	near_end;homopolymer
+example	L1:6-11	s2	s3	H1	H0	indel_presence	del:ref:5:CAA:C	.	near_end;homopolymer
+example	L1:16-18	s1	s2	H1	H1	equivalent_representation	del:ref:15:CG:C;ins:ref:17:A:AG	snp:ref:16:G:A;snp:ref:17:A:G	near_end
+example	L1:16-18	s1	s3	H1	H0	paired_indel	del:ref:15:CG:C;ins:ref:17:A:AG	.	near_end
+example	L1:16-18	s2	s3	H1	H0	snp_presence	snp:ref:16:G:A;snp:ref:17:A:G	.	near_end
+example	L1:22-22	s1	s3	H1	missing	missing_data	snp:ref:22:T:C	.	near_end
+example	L1:22-22	s2	s3	H1	missing	missing_data	snp:ref:22:T:C	.	near_end

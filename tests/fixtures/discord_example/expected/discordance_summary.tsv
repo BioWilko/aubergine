@@ -1,0 +1,11 @@
+set	reason	n_loci_primary	n_loci_callable_primary	n_loci_any	n_pairs
+example	missing_data	1	0	1	2
+example	ambiguity	0	0	0	0
+example	equivalent_representation	0	0	1	1
+example	paired_indel	1	1	1	1
+example	indel_length	1	1	1	1
+example	indel_sequence	0	0	0	0
+example	indel_presence	0	0	1	2
+example	different_allele	0	0	0	0
+example	snp_presence	0	0	1	1
+example	mixed	0	0	0	0
